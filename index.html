@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>生日惊喜 · 弹窗祝福</title>
+  <title>祝妈妈生日快乐</title>
   <style>
     * {
       margin: 0;
@@ -17,12 +17,13 @@
       justify-content: center;
       align-items: center;
       font-family: 'Segoe UI', 'Poppins', 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
-      background: #1e1a2b; /* fallback */
+      background: #000; /* 初始纯黑背景 */
       position: relative;
       overflow: hidden;
+      transition: background 1.5s ease;
     }
 
-    /* 背景图片 — 花体字生日快乐 */
+    /* 背景图片 — 花体字生日快乐 (初始透明度为0) */
     .bg-image {
       position: fixed;
       top: 0;
@@ -31,8 +32,14 @@
       height: 100%;
       object-fit: cover;
       z-index: 0;
-      opacity: 0.9;
+      opacity: 0; /* 初始隐藏 */
       pointer-events: none;
+      transition: opacity 2s ease; /* 渐显过渡 */
+    }
+
+    /* 激活后显示的背景类 */
+    .bg-image.show {
+      opacity: 0.9;
     }
 
     /* 中央礼物盒 + 按钮区域 */
@@ -44,26 +51,25 @@
       align-items: center;
       justify-content: center;
       gap: 1.5rem;
-      transition: opacity 0.6s ease, transform 0.5s ease;
+      transition: opacity 0.8s ease, transform 0.8s ease;
       cursor: pointer;
       padding: 2rem;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1); /* 在黑色背景下半透明 */
       backdrop-filter: blur(6px);
       border-radius: 60px 20px 60px 20px;
-      box-shadow: 0 25px 40px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 240, 200, 0.5) inset;
+      box-shadow: 0 25px 40px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(255, 240, 200, 0.3) inset;
     }
 
     .gift-section.hide {
       opacity: 0;
       transform: scale(0.7);
       pointer-events: none;
-      transition: opacity 0.5s, transform 0.5s;
     }
 
     .gift-box {
       font-size: 7rem;
       line-height: 1;
-      filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.3));
+      filter: drop-shadow(0 12px 10px rgba(0, 0, 0, 0.5));
       animation: float 2.2s infinite alternate ease-in-out;
     }
 
@@ -81,74 +87,105 @@
       padding: 0.9rem 2.5rem;
       border-radius: 80px;
       letter-spacing: 3px;
-      box-shadow: 0 10px 0 #a05c15, 0 15px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 0 #a05c15, 0 15px 20px rgba(0, 0, 0, 0.4);
       cursor: pointer;
       transition: all 0.1s ease;
       text-shadow: 2px 2px 0 #ffe28c;
-      font-family: 'Segoe UI', 'Poppins', cursive;
       transform: translateY(0);
       white-space: nowrap;
     }
 
     .open-btn:active {
-      box-shadow: 0 4px 0 #a05c15, 0 10px 15px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 0 #a05c15, 0 10px 15px rgba(0, 0, 0, 0.3);
       transform: translateY(6px);
     }
 
-    /* 弹窗容器，放在顶层，但是不阻挡点击（除非有弹窗出现） */
+    /* 弹窗容器 */
     .popup-container {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none;  /* 允许点击穿透到下面的礼物按钮 */
+      pointer-events: none;
       z-index: 40;
+      transition: opacity 1s ease; /* 用于结尾淡出 */
+    }
+
+    /* 结尾时让所有弹窗变暗褪色，突出中心文字 */
+    .popup-container.fade-out {
+      opacity: 0.15; 
     }
 
     /* 每个祝福弹窗 */
     .bless-popup {
       position: absolute;
-      pointer-events: auto;  /* 弹窗本身可以有点击/交互，但不用点击，只是看起来舒服 */
-      background: rgba(255, 245, 230, 0.9);
+      pointer-events: auto;
+      background: rgba(255, 245, 230, 0.95);
       backdrop-filter: blur(8px);
       border: 2px solid #ffcf8a;
       border-radius: 30px 10px 30px 10px;
       padding: 1.2rem 2rem;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 600;
       color: #4a2e1b;
-      box-shadow: 0 20px 30px -8px rgba(0, 0, 0, 0.4), 0 0 0 4px rgba(255, 230, 170, 0.5);
+      box-shadow: 0 15px 25px -5px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 230, 170, 0.4);
       white-space: nowrap;
       max-width: 85vw;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-family: 'Segoe UI', 'Poppins', 'Comic Sans MS', cursive;
-      animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-family: 'Segoe UI', 'Poppins', sans-serif;
+      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
       transform-origin: center;
-      transition: transform 0.15s, box-shadow 0.15s;
-      cursor: default;
-      backdrop-filter: blur(10px);
-      background: linear-gradient(135deg, #fff7e8, #fff0db);
-      z-index: 50;
-      box-sizing: border-box;
-      line-height: 1.3;
+      line-height: 1.4;
       text-align: center;
-    }
-
-    /* 让弹窗有微微的浮动感 */
-    .bless-popup:hover {
-      transform: scale(1.02);
-      box-shadow: 0 22px 35px -8px rgba(0, 0, 0, 0.5), 0 0 0 6px rgba(255, 215, 120, 0.7);
+      transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.8s ease;
     }
 
     @keyframes popIn {
-      0% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
+      0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
       70% { transform: scale(1.05) rotate(2deg); opacity: 1; }
       100% { transform: scale(1) rotate(0deg); opacity: 1; }
     }
 
-    /* 重置按钮（右下角小按钮，方便再玩一次） */
+    /* 结尾中心的超级大字 */
+    .final-wish {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.2);
+      z-index: 100;
+      font-size: 4.5rem;
+      font-weight: 900;
+      color: #fff;
+      text-align: center;
+      white-space: nowrap;
+      letter-spacing: 5px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      /* 发光与阴影效果 */
+      text-shadow: 
+        0 0 10px #fff, 
+        0 0 20px #ffb3c6, 
+        0 0 40px #ff7b9c, 
+        0 0 80px #ff4d79,
+        3px 3px 10px rgba(0,0,0,0.8);
+      font-family: 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+    }
+
+    .final-wish.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+      cursor: pointer;
+      animation: pulse 2s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { text-shadow: 0 0 10px #fff, 0 0 20px #ffb3c6, 0 0 40px #ff7b9c, 0 0 80px #ff4d79, 3px 3px 10px rgba(0,0,0,0.8); }
+      100% { text-shadow: 0 0 20px #fff, 0 0 40px #ffb3c6, 0 0 60px #ff7b9c, 0 0 100px #ff4d79, 3px 3px 10px rgba(0,0,0,0.8); }
+    }
+
+    /* 重置按钮 */
     .reset-btn {
       position: fixed;
       bottom: 20px;
@@ -164,7 +201,7 @@
       font-size: 1rem;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s;
       opacity: 0;
       pointer-events: none;
       font-family: inherit;
@@ -175,23 +212,19 @@
       pointer-events: auto;
     }
 
-    .reset-btn:hover {
-      background: #ffe8b5;
-      transform: scale(1.05);
-    }
-
     /* 适配小屏幕 */
     @media (max-width: 600px) {
       .gift-box { font-size: 5rem; }
       .open-btn { font-size: 1.3rem; padding: 0.7rem 1.8rem; letter-spacing: 2px; }
-      .bless-popup { font-size: 1.1rem; padding: 0.8rem 1.3rem; white-space: normal; min-width: 150px; }
+      .bless-popup { font-size: 1.1rem; padding: 0.8rem 1.3rem; min-width: 120px; }
       .gift-section { padding: 1.5rem; gap: 1rem; }
+      .final-wish { font-size: 2.2rem; letter-spacing: 2px; white-space: normal; width: 90%; line-height: 1.5; }
     }
   </style>
 </head>
 <body>
-  <!-- 背景图片：花体字生日快乐 (内联SVG) -->
-  <svg class="bg-image" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景图片 (内联SVG) -->
+  <svg class="bg-image" id="bgImage" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#fdeff2" />
@@ -210,14 +243,11 @@
         </feMerge>
       </filter>
     </defs>
-    <!-- 背景填充 -->
     <rect width="100%" height="100%" fill="url(#bgGrad)" />
-
     <g filter="url(#softGlow)">
       <path d="M180,300 Q220,180 330,200 Q400,215 430,250 Q460,280 500,260 Q550,230 590,280 Q630,330 590,380 Q560,420 500,400 Q450,380 410,340 Q380,310 340,350 Q300,390 240,380 Q190,370 170,320 Q150,260 180,300 Z" 
             fill="#c44b6b" opacity="0.75" />
     </g>
-
     <text x="600" y="350" font-family="'Brush Script MT', 'Lucida Calligraphy', 'Dancing Script', 'Pacifico', cursive, 'Comic Sans MS'" 
           font-size="140" fill="#b34e6b" text-anchor="middle" font-weight="bold" letter-spacing="8"
           transform="rotate(-5, 600, 350)" opacity="0.9" style="font-style: italic; text-shadow: 4px 4px 0 #f0c0d0;">
@@ -228,7 +258,6 @@
           transform="rotate(-3, 600, 490)" opacity="0.9" style="font-style: italic; text-shadow: 3px 3px 0 #f0c0d0;">
       🎂 生日快乐 🎂
     </text>
-    <!-- 加一些装饰小点 -->
     <circle cx="200" cy="600" r="12" fill="#e8b3c5" opacity="0.7" />
     <circle cx="1000" cy="200" r="25" fill="#e8b3c5" opacity="0.5" />
     <circle cx="950" cy="650" r="18" fill="#e8b3c5" opacity="0.6" />
@@ -240,42 +269,46 @@
   <!-- 礼物盒部分 -->
   <div class="gift-section" id="giftSection">
     <div class="gift-box">🎁</div>
-    <button class="open-btn" id="openBtn">点击开启妳的惊喜</button>
+    <button class="open-btn" id="openBtn">点击开启妈妈专属惊喜</button>
   </div>
 
   <!-- 弹窗容器 -->
   <div class="popup-container" id="popupContainer"></div>
 
+  <!-- 结尾出现的中心大字 -->
+  <div class="final-wish" id="finalWish">祝妈妈生日快乐</div>
+
   <!-- 重置按钮 -->
-  <button class="reset-btn" id="resetBtn">✨ 再来一次 ✨</button>
+  <button class="reset-btn" id="resetBtn">✨ 再看一次 ✨</button>
 
   <script>
     (function() {
+      // 专门写给妈妈的祝福语（替换了原本的少女心文案）
       const blessings = [
-        "🎂 生日快乐！愿妳永远被爱包围！",
-        "✨ 愿妳的每一天都闪闪发光！",
-        "🌸 祝妳像花儿一样美丽绽放！",
-        "💖 愿所有的美好都如期而至！",
-        "🌈 希望妳的生活甜过彩虹糖！",
-        "🌟 妳是今天最闪亮的那颗星！",
-        "🥳 生日快乐！要一直快乐呀！",
-        "🎈 愿妳永远拥有少女心！",
-        "🍰 吃蛋糕不胖，许愿都成真！",
-        "💫 愿妳被世界温柔以待～",
-        "🦄 像独角兽一样独特又迷人！",
-        "🍀 好运永远伴随妳左右！",
-        "☀️ 愿妳的笑容比阳光更灿烂！",
-        "🌙 每一个梦想都能照进现实～",
-        "🧸 永远有人宠妳像小孩！",
-        "🎉 生日快乐！新的一岁万事胜意！",
-        "💐 愿妳拥有整片花海的浪漫！",
-        "🍭 生活甜甜的，烦恼远远的！",
-        "🕊️ 自由如风，快乐如歌！",
-        "⭐ 所有的星星都為妳闪烁！",
-        "🌺 祝妳每一天都充满惊喜！",
-        "💝 愿这份惊喜永远留在心里！",
-        "🎁 妳是世界上最棒的礼物！",
-        "🎀 生日快乐！要永远可爱！"
+        "👩‍👧 妈妈，您辛苦啦！",
+        "💖 愿岁月对您温柔以待",
+        "🌸 妈妈，您永远是最美的！",
+        "🎂 祝妈妈永远年轻漂亮！",
+        "✨ 愿您每天都有好心情",
+        "🌟 妈妈是家里的超级英雄",
+        "🥰 谢谢您一直以来的付出",
+        "🎈 愿您永远健康快乐！",
+        "🍰 甜甜的蛋糕送给最甜的您",
+        "💫 您的笑容是我最大的幸福",
+        "🦄 愿您永远无忧无虑",
+        "🍀 好运永远伴随妈妈左右",
+        "☀️ 您的爱像阳光一样温暖",
+        "🌙 妈妈，做个好梦！",
+        "🧸 下辈子我还做您的孩子",
+        "🎉 祝妈妈岁岁平安！",
+        "💐 送您一整片花海",
+        "🍭 愿生活对您温柔相待",
+        "🕊️ 愿您像风一样自由快乐",
+        "⭐ 所有的星星都为妈妈闪烁",
+        "🌺 妈妈，生日快乐！",
+        "💝 您是我心中最棒的妈妈",
+        "🎁 这个惊喜是专门给您的",
+        "🎀 妈妈，要永远开心哦！"
       ];
 
       let usedIndices = new Set();
@@ -290,6 +323,8 @@
       const openBtn = document.getElementById('openBtn');
       const popupContainer = document.getElementById('popupContainer');
       const resetBtn = document.getElementById('resetBtn');
+      const bgImage = document.getElementById('bgImage');
+      const finalWish = document.getElementById('finalWish');
 
       function resetAll() {
         if (blessingInterval) {
@@ -297,11 +332,15 @@
           blessingInterval = null;
         }
         popupContainer.innerHTML = '';
+        popupContainer.classList.remove('fade-out');
         usedIndices.clear();
         currentPopupCount = 0;
         isOpened = false;
+        
         giftSection.classList.remove('hide');
         resetBtn.classList.remove('show');
+        bgImage.classList.remove('show');
+        finalWish.classList.remove('show');
       }
 
       function getRandomUnusedBlessing() {
@@ -344,20 +383,36 @@
         popup.style.top = top + 'px';
         popup.style.visibility = 'visible';
 
-        const rotate = (Math.random() - 0.5) * 6; 
+        const rotate = (Math.random() - 0.5) * 10; 
         popup.style.transform = `rotate(${rotate}deg)`;
 
         currentPopupCount++;
+        
+        // 如果弹窗全部生成完毕
         if (currentPopupCount >= MAX_POPUPS) {
           if (blessingInterval) {
             clearInterval(blessingInterval);
             blessingInterval = null;
           }
-          resetBtn.classList.add('show');
+          
+          // 延迟一小会儿，然后让弹窗淡出，中心显示大字
+          setTimeout(() => {
+            // 弹窗散开/淡出效果
+            popupContainer.classList.add('fade-out'); 
+            // 出现中间的大字
+            finalWish.classList.add('show');
+            // 显示右下角的重置按钮
+            resetBtn.classList.add('show');
+          }, 800); // 800毫秒后开始结尾动画
         }
       }
 
       function startPopupSpree() {
+        // 背景图渐显
+        setTimeout(() => {
+          bgImage.classList.add('show');
+        }, 200);
+
         const firstBless = getRandomUnusedBlessing();
         if (firstBless) createPopup(firstBless);
 
@@ -366,9 +421,6 @@
             if (blessingInterval) {
               clearInterval(blessingInterval);
               blessingInterval = null;
-            }
-            if (currentPopupCount >= MAX_POPUPS) {
-              resetBtn.classList.add('show');
             }
             return;
           }
@@ -380,7 +432,6 @@
               clearInterval(blessingInterval);
               blessingInterval = null;
             }
-            resetBtn.classList.add('show');
           }
         }, 350); 
       }
@@ -408,6 +459,8 @@
       });
 
       resetBtn.addEventListener('click', handleReset);
+      // 点击中间的大字也可以重新来一次
+      finalWish.addEventListener('click', handleReset);
     })();
   </script>
 </body>
